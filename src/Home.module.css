@@ -1,0 +1,96 @@
+.Home {
+    width: 720px;
+    display: flex;
+    margin: 0 auto;
+    align-items: stretch;
+    height: auto;
+    height: fit-content;
+}
+
+.poster {
+    margin-right: 20px;
+    max-width: 40%;
+    max-height: 100%;
+}
+
+.poster > img {
+    max-width: 100%;
+}
+
+.info {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding-bottom: 10px;
+}
+
+.title {
+    margin: 0;
+}
+
+.plot {
+    margin-left: 10px;
+    margin-top: 0;
+}
+
+.movieInfo {
+    display: flex;
+    flex-direction: column;
+    margin-top: 20px;
+}
+
+.movieInfo > h4 {
+    margin-bottom: 0;
+}
+
+.guessInput {
+    display: flex;
+    justify-self: flex-end;
+}
+
+.guessInput > h4 {
+    margin: 0;
+}
+
+.guessInput > div {
+    display: flex;
+}
+
+.guessInput input {
+    width: 50px;
+    margin-left: 10px;
+}
+
+.submit {
+    margin-left: 10px;
+    border: 0;
+    height: 20px;
+    width: 70px;
+    align-self: center;
+    border-radius: 15px;
+    background-color: rgb(126, 0, 0);
+    color: white;
+    font-weight: bold;
+}
+
+.guess {
+    display: flex;
+    flex-direction: column;
+}
+
+.guess > div {
+    display: flex;
+    justify-content: space-between;
+}
+
+.newMovie {
+    border: 0;
+    width: 130px;
+    height: 25px;
+    align-self: center;
+    margin-top: 10px;
+    border-radius: 15px;
+    background-color: rgb(126, 0, 0);
+    color: white;
+    font-weight: bold;
+}

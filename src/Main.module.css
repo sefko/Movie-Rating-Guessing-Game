@@ -1,0 +1,62 @@
+html, body, body > div {
+    font-family: Arial, Helvetica, sans-serif;
+    margin: 0;
+    min-width:760px;
+    width: auto !important;
+}
+
+body {
+    background-image: url('./cinema.jpg');
+    background-blend-mode: hue;
+    background-attachment: fixed; 
+    background-size: auto;
+    background-position: center;
+    color: white;
+}
+
+.Main {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+/* Header */
+.header {
+    display: flex;  
+    background-color: rgba(128, 128, 128, 0.75);
+    position: sticky;
+    top: 0;
+    width: 100%;
+    height: 55px;
+    white-space: nowrap;
+}
+
+.header > h1 {
+    margin: 0 2rem;
+    align-self: center;
+}
+
+.header a {
+    text-decoration: none;
+    color: white;
+}
+
+.header > ul {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    list-style-type: none;
+    padding: 0;
+    margin: 1rem;
+}
+
+.header > ul > li {
+    margin: 0 1rem;
+}
+
+/* Content */
+.content {
+    display: flex;
+    padding: 25px;
+    height: 90%;
+}
