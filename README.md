@@ -12,4 +12,4 @@
 Технологии: 
 
 * Back-end: Node.js/ Express.js
-* Front-end: Неопределен
+* Front-end: React
