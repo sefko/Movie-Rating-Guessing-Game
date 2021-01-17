@@ -43,7 +43,7 @@ class Home extends Component {
                     <h4>Guess rating: </h4>
                     <div>
                         <div>
-                            <input type="number" id="guess" step="0.1" min="0" max="10" maxlength="3" value={this.state.inputValue} onChange={e => this.updateInputValue(e)}></input>
+                            <input type="number" id="guess" step="0.1" min="0" max="10" value={this.state.inputValue} onChange={e => this.updateInputValue(e)}></input>
                             <span>/10</span>
                         </div>
                         <button className={styles.submit} onClick={this.guessRating}>Submit</button>
@@ -55,8 +55,10 @@ class Home extends Component {
 
     loadRandomMovie = () => {
         this.setState(initialState);
-        //fetch(`http://localhost:3000/api/movie?id=tt0472496`).then(response => {
-        fetch(`http://localhost:3000/api/randomMovie`).then(response => {
+        fetch(`http://localhost:3000/api/movie?id=tt10516352`, {
+            credentials: 'include'
+        }).then(response => {
+        //fetch(`http://localhost:3000/api/randomMovie`).then(response => {
             response.json().then(data => {
                 this.setState({movie: data});
             });

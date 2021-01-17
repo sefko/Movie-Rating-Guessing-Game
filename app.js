@@ -75,7 +75,6 @@ app.post('/auth/register', function (req, res) {
 
         console.log(body);
 
-
         db.getDb().collection('users').insertOne(body).then(resp => {
             //Check if added;
         });
@@ -109,10 +108,16 @@ app.post('/auth/login', function (req, res) {
 
         auth.createToken(data).then(token => {
             res.cookie('MRGG_COOKIE', token, { httpOnly: true }).end();
-            // res.send({ token }); //?
+            //res.send("Logged"); //?
+            console.log("Logged");
         });
     });
 })
+
+app.get('/auth/logout', /*auth,*/ (req, res) => {
+    res.clearCookie('MRGG_COOKIE');
+    res.send();
+});
 
 app.get('*', function (req, res) {
     res.status(404).send('PAGE NOT FOUND!');

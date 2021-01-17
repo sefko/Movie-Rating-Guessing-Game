@@ -5,6 +5,7 @@
     align-items: stretch;
     height: auto;
     height: fit-content;
+    max-height: 465px;
 }
 
 .poster {

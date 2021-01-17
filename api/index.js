@@ -46,6 +46,8 @@ module.exports.connect = function (app, path) {
             return;
         }
 
+        console.log('test');
+
         getDb().collection('movies').find({ imdbID }).toArray().then(data => {
             if (data.length == 0) {
                 getDb().collection('moviesDB').find({ imdbID }).toArray().then(data => {
@@ -65,7 +67,10 @@ module.exports.connect = function (app, path) {
                 return;
             } 
             
-            res.send(data[0]);
+            res.set({
+                'Access-Control-Allow-Origin': 'http://localhost:3006',
+                'Access-Control-Allow-Credentials': 'true'
+            }).send(data[0]);
         });
     });
 

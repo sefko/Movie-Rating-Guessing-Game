@@ -1,0 +1,57 @@
+.Login {
+    width: 720px;
+    display: flex;
+    margin: 0 auto;
+    height: 465px;
+}
+
+.Login h2 {
+    margin: 0;
+}
+
+.Login > form {
+    width: 300px;
+    display: flex;
+    flex-direction: column;
+    align-self: center;
+    justify-content: center;
+    margin: auto;
+    border-radius: 10px;
+    background-color: rgba(128, 128, 128, 0.75);
+    box-sizing: border-box;
+    padding: 35px 25px;
+}
+
+.Login > form > label {
+    margin-top: 20px;
+    font-size: 17px;
+}
+
+.Login > form > input {
+    height: 18px;
+    font-size: 15px;
+}
+
+.Login > form > button {
+    margin: 20px auto 5px;
+    height: 30px;
+    width: 215px;
+    border-radius: 15px;
+    border: 0;
+    font-weight: bold;
+    font-size: 15px;
+    background-color: rgb(126, 0, 0);
+    color: white;
+    cursor: pointer;
+}
+
+#register {
+    font-size: 14px;
+    margin: 0 auto;
+}
+
+#register > a {
+    text-decoration: none;
+    color: rgb(126, 1, 1);
+    text-shadow: 0 0 2px #fff;
+}
