@@ -6,15 +6,19 @@ const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
 const config = require('./config.json');
 const db = require('./db');
-const fs = require('fs');
 const api = require('./api');
-const cors = require('cors');
-const auth = require('./auth');
+const { auth, createToken } = require('./auth.js');
 const crypto = require('crypto');
 
 const app = express();
 
-app.use(cors());
+app.use(function (req, res, next) {
+    res.setHeader('Access-Control-Allow-Origin', 'http://localhost:3006');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST');
+    res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With,content-type');
+    res.setHeader('Access-Control-Allow-Credentials', true);
+    next();
+});
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
@@ -26,27 +30,6 @@ api.connect(app, '/api');
 
 app.get('/', function (req, res) {
     res.sendFile(path.join(__basedir, 'public/index.html'));
-});
-
-app.post('/guessRating', function (req, res) {
-    let imdbID = req.body.imdbID;
-    let ratingGuess = req.body.guess;
-    if (typeof ratingGuess == 'string') {
-        ratingGuess = parseFloat(ratingGuess);
-    }
-    ratingGuess = ratingGuess.toFixed(1);
-
-    if (ratingGuess > 10 || ratingGuess < 0) {
-        ratingGuess = 0;
-    }
-
-    db.getDb().collection('movies').find({ imdbID }).toArray().then(data => {
-        let realRating = parseFloat(data[0].imdbRating);
-        
-        //Add guess to user
-        
-        res.send(rateGuess(ratingGuess, realRating));
-    });
 });
 
 app.post('/auth/register', function (req, res) {
@@ -93,8 +76,11 @@ app.post('/auth/login', function (req, res) {
     db.getDb().collection('users').find({ username: body.username }).toArray().then(data => {
         if (data.length == 0) {
             //No user
-            res.send('User or password is wrong');
+            res.send('User or password is wrong'); //Send signal that user does not exist
+            return;
         }
+
+        console.log(data);
 
         data = data[0];
         if (typeof body.password != 'string') {
@@ -106,17 +92,19 @@ app.post('/auth/login', function (req, res) {
             res.send('User or password is wrong');
         }
 
-        auth.createToken(data).then(token => {
+        createToken(data).then(token => {
             res.cookie('MRGG_COOKIE', token, { httpOnly: true }).end();
-            //res.send("Logged"); //?
-            console.log("Logged");
         });
     });
 })
 
 app.get('/auth/logout', /*auth,*/ (req, res) => {
     res.clearCookie('MRGG_COOKIE');
-    res.send();
+    res.sendStatus(200);
+});
+
+app.get('/auth/logged_in', auth, (req, res) => {
+    res.send({ message: "Authorized!" });
 });
 
 app.get('*', function (req, res) {
@@ -136,8 +124,3 @@ db.connect().then(() => {
         console.log(`Server listening on :${config.port}`);
     });
 });
-
-function rateGuess(guess, realRating) {
-    let result = 10 - Math.abs(realRating - guess);
-    return { guess, realRating, result };
-}

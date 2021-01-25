@@ -18,9 +18,13 @@ class Login extends Component {
                 headers: {
                     'Content-Type': 'application/json'
                 },
+                credentials: 'include',
                 body: JSON.stringify(this.state)
             }).then(response => {
-                //See if logged, maybe redirect
+                //TODO Check for response
+                this.setState({ password: undefined });
+                this.props.checkLoginStatus();
+                this.props.history.push('/');
             });
     }
 

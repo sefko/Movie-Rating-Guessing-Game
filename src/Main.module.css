@@ -39,19 +39,25 @@ body {
 .header a {
     text-decoration: none;
     color: white;
+    cursor: pointer;
 }
 
 .header > ul {
     display: flex;
-    justify-content: space-between;
+    flex-direction: row;
     align-items: center;
     list-style-type: none;
     padding: 0;
     margin: 1rem;
+    width: 100%;
 }
 
-.header > ul > li {
+.header > ul li {
     margin: 0 1rem;
+}
+
+ul > .right {
+    margin-left: auto !important;
 }
 
 /* Content */

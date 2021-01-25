@@ -2,19 +2,45 @@ import React, { Component } from "react";
 import styles from './Home.module.css';
  
 const initialState = {
-    inputValue: "",
+    inputValue: '',
+    competition: null,
     movie: null,
     result: null
 };
 
-class Home extends Component {
+const resetState = {
+    inputValue: '',
+    movie: null,
+    result: null
+}
+
+class Compete extends Component {
     constructor() {
         super();
         this.state = initialState;
     }   
 
     componentDidMount() {
-        this.loadRandomMovie();
+        fetch('http://localhost:3000/auth/logged_in', { credentials: 'include' }).then(response => {
+            this.setState({ loggedIn: response.statusText === 'OK'});
+        }).then(() => {
+            if (this.state.loggedIn) {
+                this.getCompetition().then(() => this.loadNextMovie());
+            }
+        })
+        
+    }
+
+    getCompetition = () => {
+        return fetch('http://localhost:3000/api/compete', { 
+            method: 'POST',
+            credentials: 'include' })
+        .then(response => {
+            return response.json();
+        })
+        .then(data => {
+            this.setState({ competition: data });
+        })
     }
 
     updateInputValue(evt) {
@@ -30,11 +56,11 @@ class Home extends Component {
             return (
                 <div className={styles.guess}>
                     <div>
-                        <div>Result: {Home.evaluateGuess(context)}</div>
+                        <div>Result: {Compete.evaluateGuess(context)}</div>
                         <div>Your guess: {context.guess}/10</div>
                         <div>Rating: {context.realRating.toFixed(1)}/10</div>
                     </div>
-                    <button className={styles.newMovie} onClick={this.loadRandomMovie}>Try Other Movie</button>
+                    <button className={styles.newMovie} onClick={this.componentDidMount.bind(this)}>Next movie</button>
                 </div>
             );
         } else {
@@ -53,15 +79,29 @@ class Home extends Component {
         }
     };
 
-    loadRandomMovie = () => {
-        this.setState(initialState);
-        fetch(`http://localhost:3000/api/movie?id=tt0289747`, {
+    loadNextMovie = () => {
+        this.setState(resetState);
+        let competition = this.state.competition;
+        let imdbID = null;
+
+        for (let movie of competition.movies) {
+            if (!movie.guessed) {
+                imdbID = movie.imdbID;
+                break;
+            }
+        }
+
+        if (!imdbID) {
+            //all guessed
+            return;
+        }
+
+        fetch(`http://localhost:3000/api/movie?id=${imdbID}`, {
             credentials: 'include'
         }).then(response => {
-        //fetch(`http://localhost:3000/api/randomMovie`).then(response => {
-            response.json().then(data => {
-                this.setState({movie: data});
-            });
+            return response.json();
+        }).then(data => {
+            this.setState({ movie: data });
         });
     };
 
@@ -70,16 +110,17 @@ class Home extends Component {
         guess = guess.toFixed(1);
 
         if (!isNaN(guess) && guess <= 10 && guess >= 0) {
-            fetch(`http://localhost:3000/api/guessRating`, {
+            fetch(`http://localhost:3000/api/compete_guess`, {
                 method: 'POST',
+                credentials: 'include',
                 headers: {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({ guess: guess, imdbID: this.state.movie.imdbID })
             }).then(response => {
-                return response.json();
+                return response.json()
             }).then(data => {
-                this.setState({result: data});
+                this.setState({ result: data });
             });
         } else {
             //TODO Send error
@@ -87,6 +128,11 @@ class Home extends Component {
     };
 
     render() {
+        if (!this.state.loggedIn) {
+            return <div>
+                Make an account
+            </div>
+        }
         if (this.state.movie) {
             return (
                 <div className={styles.Home}>
@@ -133,4 +179,4 @@ class Home extends Component {
     }
 }
  
-export default Home;
+export default Compete;
