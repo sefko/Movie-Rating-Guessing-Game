@@ -8,6 +8,13 @@
     max-height: 465px;
 }
 
+.container {
+    width: 720px;
+    display: flex;
+    flex-direction: column;
+    margin: 0 auto;
+}
+
 .poster {
     margin-right: 20px;
     max-width: 40%;
@@ -88,6 +95,35 @@
 .newMovie {
     border: 0;
     width: 130px;
+    height: 25px;
+    align-self: center;
+    margin-top: 10px;
+    border-radius: 15px;
+    background-color: rgb(126, 0, 0);
+    color: white;
+    font-weight: bold;
+}
+
+.competition {
+    display: flex;
+}
+
+.competition > div {
+    display: flex;
+    flex-direction: column;
+    margin: auto;
+    margin-top: 20px;
+    padding: 15px;
+    border-radius: 10px;
+    background-color: rgba(128, 128, 128, 0.75);
+}
+
+.competition > div > h4 {
+    margin: 0 auto 10px;
+}
+
+.redButton {
+    border: 0;
     height: 25px;
     align-self: center;
     margin-top: 10px;

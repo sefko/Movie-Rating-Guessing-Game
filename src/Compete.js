@@ -25,7 +25,7 @@ class Compete extends Component {
             this.setState({ loggedIn: response.statusText === 'OK'});
         }).then(() => {
             if (this.state.loggedIn) {
-                this.getCompetition().then(() => this.loadNextMovie());
+                this.getCompetition().then(() => this.loadLastMovie());
             }
         })
         
@@ -51,16 +51,17 @@ class Compete extends Component {
 
     getGuessIfGuessed = () => {
         let context = this.state.result;
+        console.log(context);
 
         if (context) {
             return (
                 <div className={styles.guess}>
                     <div>
                         <div>Result: {Compete.evaluateGuess(context)}</div>
-                        <div>Your guess: {context.guess}/10</div>
+                        <div>Your guess: {context.ratingGuess}/10</div>
                         <div>Rating: {context.realRating.toFixed(1)}/10</div>
                     </div>
-                    <button className={styles.newMovie} onClick={this.componentDidMount.bind(this)}>Next movie</button>
+                    {!this.state.competition.finished ? <button className={styles.newMovie} onClick={this.loadNextMovie}>Next movie</button> : null}
                 </div>
             );
         } else {
@@ -105,6 +106,36 @@ class Compete extends Component {
         });
     };
 
+    loadLastMovie = () => {
+        this.setState(resetState);
+        let competition = this.state.competition;
+        let imdbID = null;
+        let last = 0;
+
+        if (competition.finished) {
+            last = 9;
+        } else {
+            for (let movie of competition.movies) {
+                if (movie.guessed) {
+                    ++last;
+                } else {
+                    --last;
+                    break;
+                }
+            }
+        }
+
+        imdbID = competition.movies[last].imdbID;
+
+        fetch(`http://localhost:3000/api/movie?id=${imdbID}`, {
+            credentials: 'include'
+        }).then(response => {
+            return response.json();
+        }).then(data => {
+            this.setState({ movie: data, result: competition.movies[last].guess });
+        });
+    }
+
     guessRating = () => {
         let guess = parseFloat(this.state.inputValue);
         guess = guess.toFixed(1);
@@ -120,12 +151,44 @@ class Compete extends Component {
             }).then(response => {
                 return response.json()
             }).then(data => {
-                this.setState({ result: data });
+                this.setState({ result: data.ratedGuess,
+                                competition: data.competition });
             });
         } else {
             //TODO Send error
         }
     };
+
+    newCompetition = () => {
+        return fetch('http://localhost:3000/api/compete', { 
+            method: 'POST',
+            credentials: 'include',
+            headers: {
+                'Content-type': 'application/json'
+            },
+            body: JSON.stringify({ new: true })})
+        .then(response => {
+            return response.json();
+        })
+        .then(data => {
+            this.setState({ competition: data });
+            this.loadNextMovie();
+        })
+    }
+
+    addToLeaderboard = () => {
+        return fetch('http://localhost:3000/api/add_to_leaderboard', { 
+            method: 'POST',
+            credentials: 'include'
+        });
+        //TODO redirect to leaderboard
+    }
+
+    getAddToToLeaderboardButton = () => {
+        if (this.state.competition.finished) {
+            return (<button className={styles.redButton} onClick={this.addToLeaderboard}>Add to leaderboard</button>);
+        }
+    }
 
     render() {
         if (!this.state.loggedIn) {
@@ -135,23 +198,34 @@ class Compete extends Component {
         }
         if (this.state.movie) {
             return (
-                <div className={styles.Home}>
-                    <object className={styles.poster} data={this.state.movie.Poster != 'N/A' ? this.state.movie.Poster : null}>
-                        <img src="http://localhost:3000/no-poster.jpg" alt="No poster"></img>
-                    </object>
-                    <div className={styles.info}>
-                        <div>
-                            <h2 className={styles.title}>{this.state.movie.Title} ({this.state.movie.Year})</h2>
-                            <div className={styles.movieInfo}>
-                                <h4>Released: {this.state.movie.Released !== 'N/A' ? this.state.movie.Released : this.state.movie.Year}</h4>
-                                <h4>Genre: {this.state.movie.Genre}</h4>
-                                <h4>Country: {this.state.movie.Country}</h4>
-                                <h4>Runtime: {this.state.movie.Runtime}</h4>
-                                <h4>Summary:</h4>
+                <div className={styles.container}>
+                    <div className={styles.Home}>
+                        <object className={styles.poster} data={this.state.movie.Poster != 'N/A' ? this.state.movie.Poster : null}>
+                            <img src="http://localhost:3000/no-poster.jpg" alt="No poster"></img>
+                        </object>
+                        <div className={styles.info}>
+                            <div>
+                                <h2 className={styles.title}>{this.state.movie.Title} ({this.state.movie.Year})</h2>
+                                <div className={styles.movieInfo}>
+                                    <h4>Released: {this.state.movie.Released !== 'N/A' ? this.state.movie.Released : this.state.movie.Year}</h4>
+                                    <h4>Genre: {this.state.movie.Genre}</h4>
+                                    <h4>Country: {this.state.movie.Country}</h4>
+                                    <h4>Runtime: {this.state.movie.Runtime}</h4>
+                                    <h4>Summary:</h4>
+                                </div>
+                                <p className={styles.plot}>{this.state.movie.Plot}</p>
                             </div>
-                            <p className={styles.plot}>{this.state.movie.Plot}</p>
+                            {this.getGuessIfGuessed()}
                         </div>
-                        {this.getGuessIfGuessed()}
+                    </div>
+                    <div className={styles.competition}>
+                        <div>
+                            <h4>Competition stats</h4>
+                            <div>Movies guessed: {this.state.competition.guessedMovies}/10</div>
+                            <div>Current result: {this.state.competition.currentResult}/10</div>
+                            <button className={styles.redButton} onClick={this.newCompetition}>New competition</button>
+                            {this.getAddToToLeaderboardButton()}
+                        </div>
                     </div>
                 </div>
             );

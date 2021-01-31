@@ -55,7 +55,7 @@ class Home extends Component {
 
     loadRandomMovie = () => {
         this.setState(initialState);
-        fetch(`http://localhost:3000/api/movie?id=tt0289747`, {
+        fetch(`http://localhost:3000/api/movie?id=tt0317219`, {
             credentials: 'include'
         }).then(response => {
         //fetch(`http://localhost:3000/api/randomMovie`).then(response => {

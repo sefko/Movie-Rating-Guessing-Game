@@ -98,11 +98,12 @@ module.exports.connect = function (app, path) {
     
     router.post('/compete', auth, function (req, res) {
         const username = req.user.username;
+        const newCompetition = req.body.new;
         
         getDb().collection('users').find({ username }).toArray().then(data => {
             let userdata = data[0];
     
-            if (userdata.competition == undefined) {
+            if (userdata.competition == undefined || newCompetition) {
                 generateCompetition().then(competition => {
                     userdata.competition = competition;
                     getDb().collection('users').updateOne({ username }, { $set: { competition }});
@@ -129,23 +130,52 @@ module.exports.connect = function (app, path) {
             return getDb().collection('movies').find({ imdbID }).toArray();
         }).then(data => {
             let realRating = parseFloat(data[0].imdbRating);
+            let currentResult = 0;
+            let guessedMovies = 0;
 
             competition.movies = competition.movies.map(movie => {
-                if (movie.imdbID == imdbID) {
+                if (movie.imdbID == imdbID && movie.guessed == false) {
                     movie.guessed = true;
-                    movie.guess = ratingGuess;
                     ratedGuess = rateGuess(ratingGuess, realRating)
-                    movie.points = ratedGuess;
+                    movie.guess = ratedGuess;
                 } 
 
+                if (movie.guessed) {
+                    guessedMovies += 1;
+                    currentResult += movie.guess.result;
+                }
+                
                 return movie;
             });
 
+            competition.guessedMovies = guessedMovies;
+            competition.finished = guessedMovies == 10;
+            competition.currentResult = (currentResult / guessedMovies).toFixed(2);
+
             getDb().collection('users').updateOne({ username }, { $set: { competition }});
-            res.send(ratedGuess);
+            res.send({ ratedGuess, competition });
         });
     });
+
+    router.post('/add_to_leaderboard', auth, function(req, res) {
+        const username = req.user.username;
     
+        getDb().collection('users').find({ username }).toArray().then(data => {
+            let competition = data[0].competition;
+
+            if (competition.finished && competition.guessedMovies == 10 && !competition.addedToLeaderboard) {
+                getDb().collection('leaderboard').insertOne({ username, result: competition.currentResult });
+                getDb().collection('users').updateOne({ username }, { addedToLeaderboard: true });
+                res.send('Success');
+            }   
+        });
+    });
+
+    router.get('/leaderboard', function (req, res) {
+        getDb().collection('leaderboard').find().sort({ result: -1 }).toArray().then(data => {
+            res.send(data.map(obj => {return { username: obj.username, result: obj.result}}));
+        });
+    });
 
     app.use(path, router);
 };
@@ -172,9 +202,9 @@ function getRandomMovieId() {
     return getDb().collection('moviesDB').aggregate([{ $sample: { size: 1 } }]).toArray();
 }
 
-function rateGuess(guess, realRating) {
-    let result = 10 - Math.abs(realRating - guess);
-    return { guess, realRating, result };
+function rateGuess(ratingGuess, realRating) {
+    let result = 10 - Math.abs(realRating - ratingGuess);
+    return { ratingGuess, realRating, result };
 }
 
 function generateCompetition() {
@@ -185,6 +215,6 @@ function generateCompetition() {
                      guess: null };
         });
 
-        return { finished: false, endResult: null, movies: data}
+        return { finished: false, guessedMovies: 0, currentResult: 0, movies: data, addedToLeaderboard: false };
     });
 }

@@ -1,0 +1,14 @@
+ol {
+    padding-left: 0;
+    display: flex;
+    flex-direction: column;
+    margin: auto;
+    width: 600px;
+    font-size: 18px;
+}
+
+ol > div,li {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 15px;
+}
