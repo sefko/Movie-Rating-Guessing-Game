@@ -10,7 +10,7 @@ module.exports.connect = function (app, path) {
     router.get('/randomMovie', function (req, res) {
         let imdbID;
         
-        getRandomMovieId().then(data => {
+        getRandomMovieId(req.query.genre).then(data => {
             imdbID = data[0].imdbID;
 
             return getDb().collection('movies').find({ imdbID }).toArray()//TODO Add to function
@@ -198,7 +198,19 @@ function processGuess(ratingGuess) {
     return ratingGuess;
 }
 
-function getRandomMovieId() {
+const genres = ['Action', 'Adult', 'Adventure', 'Animation', 'Biography', 'Comedy', 'Crime', 'Documentary', 'Drama', 'Family', 'Film-Noir', 'Game-Show', 'History', 'Horror', 'Music', 'Musical', 'Mystery', 'News', 'Reality-TV', 'Romance', 'Sci-Fi', 'Short', 'Sport', 'Talk-Show', 'Thriller', 'War', 'Western'];
+
+function getRandomMovieId(genre) {
+    if (genre != undefined) {
+        genre = genre.charAt(0).toUpperCase() + genre.slice(1);
+
+        if (genres.includes(genre)) {
+            return getDb().collection('moviesDB').aggregate([{ $match: { genres: genre } }, { $sample: { size: 1 } }]).toArray();
+        } else {
+            //if not include 
+        }
+    }
+
     return getDb().collection('moviesDB').aggregate([{ $sample: { size: 1 } }]).toArray();
 }
 

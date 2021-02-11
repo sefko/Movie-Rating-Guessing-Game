@@ -10,6 +10,8 @@ const initialState = {
 class Home extends Component {
     constructor() {
         super();
+        this.genreList = ['Any', 'Action', 'Adult', 'Adventure', 'Animation', 'Biography', 'Comedy', 'Crime', 'Documentary', 'Drama', 'Family', 'Film-Noir', 'Game-Show', 'History', 'Horror', 'Music', 'Musical', 'Mystery', 'News', 'Reality-TV', 'Romance', 'Sci-Fi', 'Short', 'Sport', 'Talk-Show', 'Thriller', 'War', 'Western'];
+
         this.state = initialState;
     }   
 
@@ -23,6 +25,22 @@ class Home extends Component {
         });
     }
 
+    selectGenre = (event) => {
+        let genre = event.target.value;
+
+        if (this.genreList.includes(genre)) {
+            this.state.selectedGenre = genre;
+
+            this.loadRandomMovie();
+        }
+    }
+
+    getGenres = () => {
+        return (<select onChange={this.selectGenre} value={this.state.selectedGenre}>
+            {this.genreList.map(genre => <option value={genre}>{genre}</option>)}
+        </select>)
+    }
+
     getGuessIfGuessed = () => {
         let context = this.state.result;
 
@@ -31,7 +49,7 @@ class Home extends Component {
                 <div className={styles.guess}>
                     <div>
                         <div>Result: {Home.evaluateGuess(context)}</div>
-                        <div>Your guess: {context.guess}/10</div>
+                        <div>Your guess: {context.ratingGuess}/10</div>
                         <div>Rating: {context.realRating.toFixed(1)}/10</div>
                     </div>
                     <button className={styles.newMovie} onClick={this.loadRandomMovie}>Try Other Movie</button>
@@ -55,10 +73,11 @@ class Home extends Component {
 
     loadRandomMovie = () => {
         this.setState(initialState);
-        fetch(`http://localhost:3000/api/movie?id=tt0317219`, {
-            credentials: 'include'
-        }).then(response => {
-        //fetch(`http://localhost:3000/api/randomMovie`).then(response => {
+        // fetch(`http://localhost:3000/api/movie?id=tt0317219`, {
+        //     credentials: 'include'
+        // }).then(response => {
+            console.log((this.state.selectedGenre != 'Any' && this.genreList.includes(this.state.selectedGenre)) ? this.state.selectedGenre : '');
+        fetch(`http://localhost:3000/api/randomMovie${(this.state.selectedGenre != 'Any' && this.genreList.includes(this.state.selectedGenre)) ? '?genre=' + this.state.selectedGenre : ''}`).then(response => {
             response.json().then(data => {
                 this.setState({movie: data});
             });
@@ -89,24 +108,32 @@ class Home extends Component {
     render() {
         if (this.state.movie) {
             return (
-                <div className={styles.Home}>
-                    <object className={styles.poster} data={this.state.movie.Poster != 'N/A' ? this.state.movie.Poster : null}>
-                        <img src="http://localhost:3000/no-poster.jpg" alt="No poster"></img>
-                    </object>
-                    <div className={styles.info}>
-                        <div>
-                            <h2 className={styles.title}>{this.state.movie.Title} ({this.state.movie.Year})</h2>
-                            <div className={styles.movieInfo}>
-                                <h4>Released: {this.state.movie.Released !== 'N/A' ? this.state.movie.Released : this.state.movie.Year}</h4>
-                                <h4>Genre: {this.state.movie.Genre}</h4>
-                                <h4>Country: {this.state.movie.Country}</h4>
-                                <h4>Runtime: {this.state.movie.Runtime}</h4>
-                                <h4>Summary:</h4>
+                <div className={styles.container}>
+                    <div className={styles.Home}>
+                        <object className={styles.poster} data={this.state.movie.Poster != 'N/A' ? this.state.movie.Poster : null}>
+                            <img src="http://localhost:3000/no-poster.jpg" alt="No poster"></img>
+                        </object>
+                        <div className={styles.info}>
+                            <div>
+                                <h2 className={styles.title}>{this.state.movie.Title} ({this.state.movie.Year})</h2>
+                                <div className={styles.movieInfo}>
+                                    <h4>Released: {this.state.movie.Released !== 'N/A' ? this.state.movie.Released : this.state.movie.Year}</h4>
+                                    <h4>Genre: {this.state.movie.Genre}</h4>
+                                    <h4>Country: {this.state.movie.Country}</h4>
+                                    <h4>Runtime: {this.state.movie.Runtime}</h4>
+                                    <h4>Summary:</h4>
+                                </div>
+                                <p className={styles.plot}>{this.state.movie.Plot}</p>
                             </div>
-                            <p className={styles.plot}>{this.state.movie.Plot}</p>
+                            {this.getGuessIfGuessed()}
                         </div>
-                        {this.getGuessIfGuessed()}
                     </div>
+                    <div className={styles.competition}>
+                        <div>
+                            <h4>Select genre</h4>
+                            {this.getGenres()}
+                        </div>
+                    </div>  
                 </div>
             );
         }
