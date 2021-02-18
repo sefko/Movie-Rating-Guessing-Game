@@ -7,7 +7,7 @@ module.exports.getDb = () => db;
 module.exports.connect = function () {
   return MongoClient.connect(config.db.url, { useUnifiedTopology: true })
     .then(client => {
-      console.log(`Connected to database ${config.db.name}`);
+      console.log(`Connected to database '${config.db.name}'`);
       db = client.db(config.db.name);
       return db;
     })

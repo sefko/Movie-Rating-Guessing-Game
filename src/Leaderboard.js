@@ -20,7 +20,7 @@ class Leaderboard extends Component {
 
         if (this.state.leaderboard) {
             return (<ol className={styles.leaderboard}>
-                <div>
+                <div key='header'>
                     <div>Position</div>
                     <div>Username</div>
                     <div>Result</div>
@@ -31,9 +31,9 @@ class Leaderboard extends Component {
                     <div>{obj.result}</div>
                 </li>)}
             </ol>);
-        } else {
-            return (<div></div>);
-        }
+        } 
+
+        return (<div></div>);
     }
 }
  

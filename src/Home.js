@@ -13,11 +13,23 @@ class Home extends Component {
         this.genreList = ['Any', 'Action', 'Adult', 'Adventure', 'Animation', 'Biography', 'Comedy', 'Crime', 'Documentary', 'Drama', 'Family', 'Film-Noir', 'Game-Show', 'History', 'Horror', 'Music', 'Musical', 'Mystery', 'News', 'Reality-TV', 'Romance', 'Sci-Fi', 'Short', 'Sport', 'Talk-Show', 'Thriller', 'War', 'Western'];
 
         this.state = initialState;
+        document.body.addEventListener('keyup', this.keypress);
     }   
 
     componentDidMount() {
         this.loadRandomMovie();
     }
+
+    keypress = (event) => {
+        var key = event.keyCode || event.charCode || 0;
+        if ([13].indexOf(key) !== -1) {
+            if (this.state.result) {
+                this.loadRandomMovie();
+            } else {
+                this.guessRating();
+            }
+        }
+    };
 
     updateInputValue(evt) {
         this.setState({
@@ -29,15 +41,15 @@ class Home extends Component {
         let genre = event.target.value;
 
         if (this.genreList.includes(genre)) {
-            this.state.selectedGenre = genre;
-
-            this.loadRandomMovie();
+            this.setState({ selectedGenre: genre }, () => {
+                this.loadRandomMovie();
+            });
         }
     }
 
     getGenres = () => {
         return (<select onChange={this.selectGenre} value={this.state.selectedGenre}>
-            {this.genreList.map(genre => <option value={genre}>{genre}</option>)}
+            {this.genreList.map(genre => <option key={genre} value={genre}>{genre}</option>)}
         </select>)
     }
 
@@ -61,7 +73,7 @@ class Home extends Component {
                     <h4>Guess rating: </h4>
                     <div>
                         <div>
-                            <input type="number" id="guess" step="0.1" min="0" max="10" value={this.state.inputValue} onChange={e => this.updateInputValue(e)}></input>
+                            <input type="number" id="guess" step="0.1" min="0" max="10" autoFocus value={this.state.inputValue} onChange={e => this.updateInputValue(e)}></input>
                             <span>/10</span>
                         </div>
                         <button className={styles.submit} onClick={this.guessRating}>Submit</button>
@@ -76,8 +88,8 @@ class Home extends Component {
         // fetch(`http://localhost:3000/api/movie?id=tt0317219`, {
         //     credentials: 'include'
         // }).then(response => {
-            console.log((this.state.selectedGenre != 'Any' && this.genreList.includes(this.state.selectedGenre)) ? this.state.selectedGenre : '');
-        fetch(`http://localhost:3000/api/randomMovie${(this.state.selectedGenre != 'Any' && this.genreList.includes(this.state.selectedGenre)) ? '?genre=' + this.state.selectedGenre : ''}`).then(response => {
+        fetch(`http://localhost:3000/api/random-movie${(this.state.selectedGenre !== 'Any' && this.genreList.includes(this.state.selectedGenre)) ? '?genre=' + this.state.selectedGenre : ''}`)
+        .then(response => {
             response.json().then(data => {
                 this.setState({movie: data});
             });
@@ -89,7 +101,8 @@ class Home extends Component {
         guess = guess.toFixed(1);
 
         if (!isNaN(guess) && guess <= 10 && guess >= 0) {
-            fetch(`http://localhost:3000/api/guessRating`, {
+            this.setState({ Error: undefined });
+            fetch(`http://localhost:3000/api/guess-rating`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -101,7 +114,7 @@ class Home extends Component {
                 this.setState({result: data});
             });
         } else {
-            //TODO Send error
+            this.setState({ Error: 'Guess must be between 0 and 10' });
         }
     };
 
@@ -110,7 +123,7 @@ class Home extends Component {
             return (
                 <div className={styles.container}>
                     <div className={styles.Home}>
-                        <object className={styles.poster} data={this.state.movie.Poster != 'N/A' ? this.state.movie.Poster : null}>
+                        <object className={styles.poster} data={this.state.movie.Poster !== 'N/A' ? this.state.movie.Poster : null}>
                             <img src="http://localhost:3000/no-poster.jpg" alt="No poster"></img>
                         </object>
                         <div className={styles.info}>
@@ -128,6 +141,7 @@ class Home extends Component {
                             {this.getGuessIfGuessed()}
                         </div>
                     </div>
+                    {this.state.Error ? <div className={styles.error}>{this.state.Error}</div> : null}
                     <div className={styles.competition}>
                         <div>
                             <h4>Select genre</h4>

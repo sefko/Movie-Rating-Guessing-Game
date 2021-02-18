@@ -55,3 +55,9 @@
     color: rgb(126, 1, 1);
     text-shadow: 0 0 2px #fff;
 }
+
+.error {
+    align-self: center;
+    color:rgb(200, 0, 0);
+    text-shadow: 0 0 2px #fff;
+}

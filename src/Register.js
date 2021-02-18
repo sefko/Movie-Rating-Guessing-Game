@@ -4,12 +4,13 @@ import styles from './LoginRegister.module.css';
  
 class Register extends Component {
     
-    constructor() {
-        super();
+    constructor(props) {
+        super(props);
         this.state = {
             username: "",
             password: "",
-            confirmPassword: ""
+            confirmPassword: "",
+            loggedIn: this.props.loginStatus
         };
     }
   
@@ -21,23 +22,35 @@ class Register extends Component {
                 },
                 body: JSON.stringify(this.state)
             }).then(response => {
-                //See if registered, maybe redirect
+                if (response.status !== 200) {
+                    return response.json();
+                } else {
+                    this.props.history.push('/login');
+                }
+            }).then(data => {
+                if (data) {
+                    this.setState(data);
+                }
             });
     }
 
     updateUsername = (event) => {
-        this.state.username = event.target.value;
+        this.setState({ username: event.target.value });
     }
 
     updatePassword = (event) => {
-        this.state.password = event.target.value;
+        this.setState({ password: event.target.value });
     }
 
     updateConfirmPassword = (event) => {
-        this.state.confirmPassword = event.target.value;
+        this.setState({ confirmPassword: event.target.value });
     }
 
     render() {
+        if (this.state.loggedIn) {
+            this.props.history.push('/');
+        }
+
         return (
             <div className={styles.Login}>
                 <form>
@@ -51,6 +64,8 @@ class Register extends Component {
 
                     <label htmlFor="confirm_password">Confirm Password</label>
                     <input id="confirm_password" type="password" onChange={e => this.updateConfirmPassword(e)}></input>
+
+                    {this.state.Error ? <div className={styles.error}>{this.state.Error}</div> : null}
 
                     <button onClick={this.attemptRegister}>Sign up</button>
 

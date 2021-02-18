@@ -2,7 +2,8 @@ import React, { Component } from "react";
 import {
   Route,
   NavLink,
-  HashRouter
+  HashRouter,
+  Switch
 } from "react-router-dom";
 import Home from "./Home";
 import Compete from "./Compete";
@@ -10,6 +11,7 @@ import Login from "./Login";
 import Register from "./Register"
 import styles from './Main.module.css';
 import Leaderboard from "./Leaderboard";
+import NotFoundPage from "./NotFoundPage";
  
 class Main extends Component {
     constructor() {
@@ -18,38 +20,37 @@ class Main extends Component {
     }
 
     logout = () => {
-        fetch('http://localhost:3000/auth/logout', { credentials: 'include' }).then(response => {
+        return fetch('http://localhost:3000/auth/logout', { credentials: 'include' }).then(response => {
           window.location.reload();
         });
     }
 
     checkLoginStatus = () => {
-      fetch('http://localhost:3000/auth/logged_in', { credentials: 'include' }).then(response => {
-        this.setState({ loggedIn: response.statusText === 'OK'});
-        //this.state.loggedIn = response.statusText === 'OK';
+      return fetch('http://localhost:3000/auth/logged-in', { credentials: 'include' }).then(response => {
+        this.setState({ loggedIn: response.status === 200 });
       })
     }
 
     componentDidMount() {
-      this.checkLoginStatus();
+        this.checkLoginStatus();
     }
 
     renderOnLogin = () => {
       if (this.state.loggedIn) {
         return <ul className={styles.ul}>
-            <li><NavLink to="/">Home</NavLink></li>
-            <li><NavLink to="/compete">Compete</NavLink></li>
-            <li><NavLink to="/leaderboard">Leaderboard</NavLink></li>
+            <li key='/'><NavLink to="/">Home</NavLink></li>
+            <li key='/compete'><NavLink to="/compete">Compete</NavLink></li>
+            <li key='/leaderboard'><NavLink to="/leaderboard">Leaderboard</NavLink></li>
 
-            <li className={styles.right}><a onClick={this.logout}>Sign out</a></li>
+            <li className={styles.right}><button onClick={this.logout}>Sign out</button></li>
         </ul>;
       } else {
         return <ul className={styles.ul}>
-            <li><NavLink to="/">Home</NavLink></li>
-            <li><NavLink to="/leaderboard">Leaderboard</NavLink></li>
+            <li key='/'><NavLink to="/">Home</NavLink></li>
+            <li key='/leaderboard'><NavLink to="/leaderboard">Leaderboard</NavLink></li>
 
-            <li className={styles.right}><NavLink to="login">Login</NavLink></li>
-            <li><NavLink to="register">Register</NavLink></li>
+            <li  key='/login' className={styles.right}><NavLink to="login">Login</NavLink></li>
+            <li key='/register'><NavLink to="register">Register</NavLink></li>
         </ul>;
       }
     }
@@ -63,11 +64,14 @@ class Main extends Component {
               {this.renderOnLogin()}
             </header>
             <div className={styles.content}>
+              <Switch>
                 <Route exact path="/" component={Home}/>
-                <Route path="/compete" component={Compete}/>
-                <Route path="/login" render={(props) => <Login {...props} checkLoginStatus={this.checkLoginStatus} />}/>
-                <Route path="/register" component={Register}/>
+                <Route path="/compete" render={(props) => <Compete {...props} loginStatus={this.state.loggedIn}/>}/>
+                <Route path="/login" render={(props) => <Login {...props} checkLoginStatus={this.checkLoginStatus} loginStatus={this.state.loggedIn}/>}/>
+                <Route path="/register" render={(props) => <Register {...props} loginStatus={this.state.loggedIn}/>}/>
                 <Route path="/leaderboard" component={Leaderboard}/>
+                <Route path="*" component={NotFoundPage} />
+              </Switch>
             </div>
           </div>
         </HashRouter>

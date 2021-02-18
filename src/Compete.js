@@ -15,21 +15,44 @@ const resetState = {
 }
 
 class Compete extends Component {
-    constructor() {
-        super();
-        this.state = initialState;
+    constructor(props) {
+        super(props);
+        this.state = {...initialState,
+            loggedIn: props.loginStatus};
+
+        document.body.addEventListener('keyup', this.keypress);
     }   
 
     componentDidMount() {
-        fetch('http://localhost:3000/auth/logged_in', { credentials: 'include' }).then(response => {
-            this.setState({ loggedIn: response.statusText === 'OK'});
-        }).then(() => {
-            if (this.state.loggedIn) {
-                this.getCompetition().then(() => this.loadLastMovie());
-            }
-        })
-        
+        if (this.state.loggedIn) {
+            this.getCompetition().then(() => this.loadNextMovie());
+        } else {
+            this.checkLoginStatus().then(() => {
+                if (this.state.loggedIn) {
+                    this.getCompetition().then(() => this.loadNextMovie()); 
+                } else {
+                    this.props.history.push('/');
+                }
+            });
+        }
     }
+
+    keypress = (event) => {
+        var key = event.keyCode || event.charCode || 0;
+        if ([13].indexOf(key) !== -1) {
+            if (this.state.result) {
+                this.loadNextMovie();
+            } else {
+                this.guessRating();
+            }
+        }
+    }
+
+    checkLoginStatus = () => {
+        return fetch('http://localhost:3000/auth/logged-in', { credentials: 'include' }).then(response => {
+          this.setState({ loggedIn: response.status === 200 });
+        })
+      }
 
     getCompetition = () => {
         return fetch('http://localhost:3000/api/compete', { 
@@ -51,7 +74,6 @@ class Compete extends Component {
 
     getGuessIfGuessed = () => {
         let context = this.state.result;
-        console.log(context);
 
         if (context) {
             return (
@@ -70,7 +92,7 @@ class Compete extends Component {
                     <h4>Guess rating: </h4>
                     <div>
                         <div>
-                            <input type="number" id="guess" step="0.1" min="0" max="10" value={this.state.inputValue} onChange={e => this.updateInputValue(e)}></input>
+                            <input type="number" id="guess" step="0.1" min="0" max="10" autoFocus value={this.state.inputValue} onChange={e => this.updateInputValue(e)}></input>
                             <span>/10</span>
                         </div>
                         <button className={styles.submit} onClick={this.guessRating}>Submit</button>
@@ -93,55 +115,33 @@ class Compete extends Component {
         }
 
         if (!imdbID) {
-            //all guessed
-            return;
-        }
+            imdbID = competition.movies[9].imdbID;
 
-        fetch(`http://localhost:3000/api/movie?id=${imdbID}`, {
-            credentials: 'include'
-        }).then(response => {
-            return response.json();
-        }).then(data => {
-            this.setState({ movie: data });
-        });
-    };
-
-    loadLastMovie = () => {
-        this.setState(resetState);
-        let competition = this.state.competition;
-        let imdbID = null;
-        let last = 0;
-
-        if (competition.finished) {
-            last = 9;
+            fetch(`http://localhost:3000/api/movie?id=${imdbID}`, {
+                credentials: 'include'
+            }).then(response => {
+                return response.json();
+            }).then(data => {
+                this.setState({ movie: data, result: competition.movies[9].guess });
+            });
         } else {
-            for (let movie of competition.movies) {
-                if (movie.guessed) {
-                    ++last;
-                } else {
-                    --last;
-                    break;
-                }
-            }
-        }
-
-        imdbID = competition.movies[last].imdbID;
-
-        fetch(`http://localhost:3000/api/movie?id=${imdbID}`, {
+            fetch(`http://localhost:3000/api/movie?id=${imdbID}`, {
             credentials: 'include'
-        }).then(response => {
-            return response.json();
-        }).then(data => {
-            this.setState({ movie: data, result: competition.movies[last].guess });
-        });
-    }
+            }).then(response => {
+                return response.json();
+            }).then(data => {
+                this.setState({ movie: data });
+            });
+        }
+    };
 
     guessRating = () => {
         let guess = parseFloat(this.state.inputValue);
         guess = guess.toFixed(1);
 
         if (!isNaN(guess) && guess <= 10 && guess >= 0) {
-            fetch(`http://localhost:3000/api/compete_guess`, {
+            this.setState({ Error: undefined });
+            fetch(`http://localhost:3000/api/compete-guess`, {
                 method: 'POST',
                 credentials: 'include',
                 headers: {
@@ -155,11 +155,12 @@ class Compete extends Component {
                                 competition: data.competition });
             });
         } else {
-            //TODO Send error
+            this.setState({ Error: 'Guess must be between 0 and 10' });
         }
     };
 
     newCompetition = () => {
+        this.setState({ Error: undefined });
         return fetch('http://localhost:3000/api/compete', { 
             method: 'POST',
             credentials: 'include',
@@ -177,11 +178,20 @@ class Compete extends Component {
     }
 
     addToLeaderboard = () => {
-        return fetch('http://localhost:3000/api/add_to_leaderboard', { 
-            method: 'POST',
-            credentials: 'include'
-        });
-        //TODO redirect to leaderboard
+        let competition = this.state.competition;
+        if (!this.state.competition.addedToLeaderboard) {
+            return fetch('http://localhost:3000/api/add-to-leaderboard', { 
+                method: 'POST',
+                credentials: 'include'
+            }).then(response => {
+                competition.addedToLeaderboard = true;
+                this.setState(competition);
+                
+                this.props.history.push('/leaderboard');
+            });
+        } else {
+            this.setState({ Error: 'Already added to leaderboard' });
+        }
     }
 
     getAddToToLeaderboardButton = () => {
@@ -193,14 +203,14 @@ class Compete extends Component {
     render() {
         if (!this.state.loggedIn) {
             return <div>
-                Make an account
+                Make an account to compete
             </div>
         }
         if (this.state.movie) {
             return (
                 <div className={styles.container}>
                     <div className={styles.Home}>
-                        <object className={styles.poster} data={this.state.movie.Poster != 'N/A' ? this.state.movie.Poster : null}>
+                        <object className={styles.poster} data={this.state.movie.Poster !== 'N/A' ? this.state.movie.Poster : null}>
                             <img src="http://localhost:3000/no-poster.jpg" alt="No poster"></img>
                         </object>
                         <div className={styles.info}>
@@ -218,6 +228,7 @@ class Compete extends Component {
                             {this.getGuessIfGuessed()}
                         </div>
                     </div>
+                    {this.state.Error ? <div className={styles.error}>{this.state.Error}</div> : null}
                     <div className={styles.competition}>
                         <div>
                             <h4>Competition stats</h4>
