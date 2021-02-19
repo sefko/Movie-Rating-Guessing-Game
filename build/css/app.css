@@ -1,0 +1,31 @@
+:host {
+    display: flex;
+    justify-content: center;
+    height: 100%;
+}
+
+:host > div {
+    display: flex;
+    flex-direction: column;
+    width: 700px;
+    margin: 25px 0 25px;
+}
+
+#image, #title{
+    display: flex;
+    justify-content: center;
+}
+
+#rating {
+    display: flex;
+    justify-content: space-around;
+}
+
+#image {
+    height: 70%;
+}
+
+#info {
+    display: flex;
+    justify-content: space-between;
+}

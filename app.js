@@ -23,14 +23,19 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(cookieParser());
 
-app.use(express.static(path.join(__basedir, '/public')));
+//app.use(express.static(path.join(__basedir, '/public')));
+app.use(express.static(path.join(__dirname, '/build')));
 
 auth.connect(app, '/auth');
 api.connect(app, '/api');
 
-app.get('/', function (req, res) {
-    res.sendFile(path.join(__basedir, 'public/index.html'));
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'build', 'index.html'))
 });
+
+// app.get('/', function (req, res) {
+//     res.sendFile(path.join(__basedir, 'public/index.html'));
+// });
 
 app.get('*', function (req, res) {
     res.status(404).send('PAGE NOT FOUND!');
